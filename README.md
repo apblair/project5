@@ -1,3 +1,4 @@
+![BuildStatus](https://github.com/apblair/project5/actions/workflows/main.yml/badge.svg?event=push)
 # Project 5
 Implementation of KMeans and Silhouette Scoring
 
