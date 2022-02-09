@@ -25,17 +25,28 @@ class KMeans:
         self.metric = metric
         self.tol = tol
         self.max_iter = max_iter
-        
-    def _init_centroids(self):
+    
+    def _check_input_mat(self, mat):
         """
-        Compute the initial centroids
+        """
+        assert self.k < mat.shape[0], "Error: The number of centroids must be less than the number of observations."
+
+        if mat.ndim == 1:
+            print("Warning: Reshaping 1D numpy array (-1,1).")
+            print("Warning: Consider an alternative algorithm like KDE for one dimensional data.")
+            mat = mat.reshape(-1,1) 
+
+        self._mat = mat
+
+    def _find_nearest_centroids(self):
+        """
+        Find nearest centroids
 
         References:
         -----------
         1. https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
         2. https://www.askpython.com/python/examples/k-means-clustering-from-scratch
         """
-        self._centroids = self._mat[np.random.choice(self._mat.shape[0], self.k, replace=False),:]
         self._distances = cdist(self._mat, self._centroids, self.metric)
         self._labels = np.argmin(self._distances, axis=1)
     
@@ -60,19 +71,21 @@ class KMeans:
         ----------
         1. https://blog.paperspace.com/speed-up-kmeans-numpy-vectorization-broadcasting-profiling/
         """
-        assert self.k < mat.shape[0], "Error: The number of centroids must be less than the number of observations."
-        if mat.ndim == 1:
-            print("Warning: Reshaping 1D numpy array (-1,1).")
-            print("Warning: Consider an alternative algorithm like KDE for one dimensional data.")
-            mat = mat.reshape(-1,1) 
-
-        self._mat = mat
+        self._check_input_mat(mat)
+        self._centroids = self._mat[np.random.choice(self._mat.shape[0], self.k, replace=False),:]
+        
         self._mse = []
         for iter_step in range(self.max_iter):
-            self._init_centroids()
+            self._find_nearest_centroids()
+
             for k_cluster in range(self.k):
                 self._centroids[k_cluster,:] = np.mean(self._mat[self._labels == k_cluster,:],axis = 0)
+            
             self._mse.append(self._calculate_mse())
+            if iter_step > 0 and abs(self._mse[iter_step] - self._mse[iter_step-1]) <= self.tol:
+                print('Optimization complete')
+                self._mse = self._mse[iter_step]
+                break
 
     def predict(self, mat: np.ndarray) -> np.ndarray:
         """
@@ -109,5 +122,4 @@ mat, labels = make_clusters()
 # print(mat)
 # print(labels)
 
-x = np.random.random(100)
-KMeans(k=3).fit(x)
+KMeans(k=3).fit(mat)
