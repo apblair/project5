@@ -20,11 +20,12 @@ class KMeans:
             max_iter: int
                 the maximum number of iterations before quitting model fit
         """
+        assert k > 0, "Error: The number of centroids must be greater than 0."
         self.k = k
         self.metric = metric
         self.tol = tol
         self.max_iter = max_iter
-    
+        
     def _init_centroids(self):
         """
         Compute the initial centroids
@@ -46,7 +47,6 @@ class KMeans:
         distances_squared = np.square(distances)
         mse = distances_squared.mean()
         return mse
-        
 
     def fit(self, mat: np.ndarray):
         """
@@ -60,6 +60,12 @@ class KMeans:
         ----------
         1. https://blog.paperspace.com/speed-up-kmeans-numpy-vectorization-broadcasting-profiling/
         """
+        assert self.k < mat.shape[0], "Error: The number of centroids must be less than the number of observations."
+        if mat.ndim == 1:
+            print("Warning: Reshaping 1D numpy array (-1,1).")
+            print("Warning: Consider an alternative algorithm like KDE for one dimensional data.")
+            mat = mat.reshape(-1,1) 
+
         self._mat = mat
         self._mse = []
         for iter_step in range(self.max_iter):
@@ -67,8 +73,6 @@ class KMeans:
             for k_cluster in range(self.k):
                 self._centroids[k_cluster,:] = np.mean(self._mat[self._labels == k_cluster,:],axis = 0)
             self._mse.append(self._calculate_mse())
-            print(self._mse)
-            break        
 
     def predict(self, mat: np.ndarray) -> np.ndarray:
         """
@@ -105,4 +109,5 @@ mat, labels = make_clusters()
 # print(mat)
 # print(labels)
 
-KMeans(k=3).fit(mat)
+x = np.random.random(100)
+KMeans(k=3).fit(x)
