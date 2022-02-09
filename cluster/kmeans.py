@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.spatial.distance import cdist
-from utils import *
 
 class KMeans:
     def __init__(
@@ -26,8 +25,15 @@ class KMeans:
         self.tol = tol
         self.max_iter = max_iter
     
-    def _check_input_mat(self, mat):
+    def _check_input_mat(self, mat: np.ndarray) -> np.ndarray: 
         """
+        Check if the number of centroids are less than the number of observations in the input matrix.
+        Check if the input matrix is one dimensional
+
+        inputs: 
+            mat: np.ndarray
+        outputs:
+            mat: np.ndarray
         """
         assert self.k < mat.shape[0], "Error: The number of centroids must be less than the number of observations."
 
@@ -36,26 +42,38 @@ class KMeans:
             print("Warning: Consider an alternative algorithm like KDE for one dimensional data.")
             mat = mat.reshape(-1,1) 
 
-        self._mat = mat
+        return mat
 
-    def _find_nearest_centroids(self):
+    def _find_nearest_centroids(self,  mat: np.ndarray) -> np.ndarray:
         """
-        Find nearest centroids
+        Find the nearest centroids for each point.
+        
+        inputs: 
+            mat: np.ndarray
+                A 2D matrix where the rows are observations and columns are features
+
+        output:
+            np.ndarray
+                A 1D array specifying the class labels
 
         References:
         -----------
         1. https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
         2. https://www.askpython.com/python/examples/k-means-clustering-from-scratch
         """
-        self._distances = cdist(self._mat, self._centroids, self.metric)
-        self._labels = np.argmin(self._distances, axis=1)
+        self._distances = cdist(mat, self._centroids, self.metric)
+        return np.argmin(self._distances, axis=1)
     
-    def _calculate_mse(self):
+    def _calculate_mse(self, mat: np.ndarray) -> float:
         """
-        Calculate the mean squared error of the centroid distances.
+        Calculate the mean squared error (mse) of the centroid distances.
+        
+        inputs: 
+            mat: np.ndarray
+                A 2D matrix where the rows are observations and columns are features
         """
         points_to_centroid = np.array(list(map(lambda label: self._centroids[label], self._labels)))
-        distances = np.diag(cdist(self._mat, points_to_centroid, metric=self.metric))
+        distances = np.diag(cdist(mat, points_to_centroid, metric=self.metric))
         distances_squared = np.square(distances)
         mse = distances_squared.mean()
         return mse
@@ -72,17 +90,25 @@ class KMeans:
         ----------
         1. https://blog.paperspace.com/speed-up-kmeans-numpy-vectorization-broadcasting-profiling/
         """
-        self._check_input_mat(mat)
-        self._centroids = np.random.rand(self.k, self._mat.shape[1])
-        self._find_nearest_centroids()
+        mat = self._check_input_mat(mat)
+        
+        # Initialize random centroids
+        self._centroids = np.random.rand(self.k, mat.shape[1])
+        self._labels = self._find_nearest_centroids(mat)
+        
+        # Fit model
         self._mse = []
         for iter_step in range(self.max_iter):
             for k_cluster in range(self.k):
-                self._centroids[k_cluster,:] = np.mean(self._mat[self._labels == k_cluster,:],axis = 0)
-            self._find_nearest_centroids()
-            self._mse.append(self._calculate_mse())
+                # Find the mean of the cluster for the new centroid
+                self._centroids[k_cluster,:] = np.mean(mat[self._labels == k_cluster,:],axis = 0)
+        
+            # Find the nearest centroid for each point and compute the MSE
+            self._labels = self._find_nearest_centroids(mat)
+            self._mse.append(self._calculate_mse(mat))
+
+            # Check clustering stability against previous MSE during optimization to end the model fit
             if iter_step > 0 and abs(self._mse[iter_step] - self._mse[iter_step-1]) <= self.tol:
-                print('Optimization complete')
                 self._mse = self._mse[iter_step]
                 break
 
@@ -98,6 +124,9 @@ class KMeans:
             np.ndarray
                 a 1D array with the cluster label for each of the observations in `mat`
         """
+        test_mat = self._check_input_mat(mat)
+        predicted_labels = self._find_nearest_centroids(test_mat)
+        return predicted_labels
 
     def get_error(self) -> float:
         """
@@ -118,8 +147,3 @@ class KMeans:
                 a `k x m` 2D matrix representing the cluster centroids of the fit model
         """
         return self._centroids
-
-mat, labels = make_clusters()
-k_model = KMeans(k=3)
-k_model.fit(mat)
-print(k_model.get_centroids())
