@@ -41,14 +41,22 @@ class Silhouette:
 
         a_i = {label: [1/(c_i[label]-1) * val for val in v] for label,v in d_ij.items()}
         
-        # b_i
+        b_i = {label: [] for label in cluster_labels}
         for index,label in zip(range(X.shape[0]), y):
             j_list = [j for j in cluster_labels if j != label]
-            print(index, label, j_list)
             d_ij_list = [(1/c_i[j]) * sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==j], metric=self.metric)[0]) for j in j_list] 
-            print(d_ij_list)
-            print(min(d_ij_list))
-            break
+            b_i[label].append(min(d_ij_list))
+        
+        sil_dict = {label:[] for label in cluster_labels}
+        for label in cluster_labels:
+            for b,a in zip(b_i[label],a_i[label]):
+                num =  b-a
+                den = max([b,a])
+                sil_dict[label].append(num/den)
+        
+        sil_vals = [x for x in sil_dict.values()]
+        sil_vals = [item for sublist in sil_vals for item in sublist]
+        return sil_vals
 
 mat, labels = make_clusters()
 # test_mat, test_labels = make_clusters()
@@ -64,6 +72,8 @@ predicted_labels = k_model.predict(mat)
 sil = Silhouette()
 sil.score(mat, predicted_labels)
 
-# silhouette_values = silhouette_samples(mat, labels)
-# print(silhouette_values)
+silhouette_values = silhouette_samples(mat, predicted_labels)
+print(min(silhouette_values))
+# print(silhouette_values[np.where(labels==2)])
+# print()
 # print(np.allclose(sil.score(mat, predicted_labels),silhouette_values))
