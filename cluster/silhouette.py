@@ -33,36 +33,40 @@ class Silhouette:
         """
         
         cluster_labels = list(set(y))
-        c_i = collections.Counter(y) # number of points belonging to cluster i
-        
-        # For each cluster, compute the distance between data points i and j in cluster i.
-        d_ij = {label : [sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==label], metric=self.metric)[0]) \
-            for index in list(np.where(y==label)[0])] \
-                for label in cluster_labels}
+        # check if there is only one cluster 
+        if len(cluster_labels) == 1:
+            # set silhouette scores to zero
+            return [0] * len(y)
+        else:
+            c_i = collections.Counter(y) # number of points belonging to cluster i
+            # For each cluster, compute the distance between data points i and j in cluster i.
+            d_ij = {label : [sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==label], metric=self.metric)[0]) \
+                for index in list(np.where(y==label)[0])] \
+                    for label in cluster_labels}
 
-        # For each cluster, compute the mean distance between i and all other data points in the cluster i
-        a_i = {label: [1/(c_i[label]-1) * val for val in v] for label,v in d_ij.items()}
-        
-        # Compute the mean dissimilarity of point i to cluster j, as the mean of the distance from i to all points in cluster j
-        b_i = {label: [] for label in cluster_labels}
-        for index,label in zip(range(X.shape[0]), y):
-            # Find the smallest mean distance of i to all points in any other cluster, of which i is not a member
-            j_list = [j for j in cluster_labels if j != label]
-            d_ij_list = [(1/c_i[j]) * sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==j], metric=self.metric)[0]) for j in j_list] 
-            b_i[label].append(min(d_ij_list))
-        
-        # Compute silhouette values for each data point
-        # NOTE: the silhouette dictionary can be used to create silhouette plots (e.g., https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html#sphx-glr-auto-examples-cluster-plot-kmeans-silhouette-analysis-py)
-        sil_dict = {label:[] for label in cluster_labels}
-        for label in cluster_labels:
-            for b,a in zip(b_i[label],a_i[label]):                
-                silhouette_numerator =  b-a
-                silhouette_denominator = max([b,a])
-                sil_dict[label].append(silhouette_numerator/silhouette_denominator)
-        
-        # Order silhouette values by y
-        silhouette_values = []
-        for label in y:
-            silhouette_values.append(sil_dict[label].pop(0))
+            # For each cluster, compute the mean distance between i and all other data points in the cluster i
+            a_i = {label: [1/(c_i[label]-1) * val for val in v] for label,v in d_ij.items()}
+            
+            # Compute the mean dissimilarity of point i to cluster j, as the mean of the distance from i to all points in cluster j
+            b_i = {label: [] for label in cluster_labels}
+            for index,label in zip(range(X.shape[0]), y):
+                # Find the smallest mean distance of i to all points in any other cluster, of which i is not a member
+                j_list = [j for j in cluster_labels if j != label]
+                d_ij_list = [(1/c_i[j]) * sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==j], metric=self.metric)[0]) for j in j_list] 
+                b_i[label].append(min(d_ij_list))
+            
+            # Compute silhouette values for each data point
+            # NOTE: the silhouette dictionary can be used to create silhouette plots (e.g., https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html#sphx-glr-auto-examples-cluster-plot-kmeans-silhouette-analysis-py)
+            sil_dict = {label:[] for label in cluster_labels}
+            for label in cluster_labels:
+                for b,a in zip(b_i[label],a_i[label]):                
+                    silhouette_numerator =  b-a
+                    silhouette_denominator = max([b,a])
+                    sil_dict[label].append(silhouette_numerator/silhouette_denominator)
+            
+            # Order silhouette values by y
+            silhouette_values = []
+            for label in y:
+                silhouette_values.append(sil_dict[label].pop(0))
 
-        return np.array(silhouette_values)
+            return np.array(silhouette_values)

@@ -26,9 +26,6 @@ def test_silhouette():
     predicted_labels = k_model.predict(mat)
 
     # Calculate silhouette scores and check against sklearn
-    silhouette = cluster.Silhouette()
-    bmi203_proj5_sihouette_values = silhouette.score(mat, predicted_labels)
-
+    bmi203_proj5_sihouette_values = cluster.Silhouette().score(mat, predicted_labels)
     sklearn_silhouette_values = silhouette_samples(mat, predicted_labels)
-    
     assert np.allclose(bmi203_proj5_sihouette_values, sklearn_silhouette_values)

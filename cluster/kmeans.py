@@ -7,7 +7,8 @@ class KMeans:
             k: int,
             metric: str = "euclidean",
             tol: float = 1e-6,
-            max_iter: int = 100):
+            max_iter: int = 100,
+            seed: int = 42):
         """
         inputs:
             k: int
@@ -19,11 +20,14 @@ class KMeans:
             max_iter: int
                 the maximum number of iterations before quitting model fit
         """
+        np.random.seed(seed)
         assert k > 0, "Error: The number of centroids must be greater than 0."
+        assert k > 1, "Error: Setting k=1 means every point belongs to the same cluster."
         self.k = k
         self.metric = metric
         self.tol = tol
         self.max_iter = max_iter
+        self.seed = seed
     
     def _check_input_mat(self, mat: np.ndarray) -> np.ndarray: 
         """
