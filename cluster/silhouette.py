@@ -2,9 +2,6 @@ from re import A
 import numpy as np
 from scipy.spatial.distance import cdist
 import collections
-from kmeans import *
-from utils import *
-from sklearn.metrics import silhouette_samples, silhouette_score
 
 class Silhouette:
     def __init__(self, metric: str = "euclidean"):
@@ -69,23 +66,3 @@ class Silhouette:
             silhouette_values.append(sil_dict[label].pop(0))
 
         return np.array(silhouette_values)
-
-mat, labels = make_clusters()
-# test_mat, test_labels = make_clusters()
-
-k_model = KMeans(k=3)
-k_model.fit(mat)
-predicted_labels = k_model.predict(mat)
-
-# print(k_model.get_centroids())
-# print(k_model.get_error())
-# print(k_model.predict(test_mat))
-
-sil = Silhouette()
-sil.score(mat, predicted_labels)
-
-silhouette_values = silhouette_samples(mat, predicted_labels)
-# silhouette_values = list(silhouette_values)
-# print(silhouette_values.index(min(silhouette_values)))
-
-print(np.allclose(sil.score(mat, predicted_labels),silhouette_values))
