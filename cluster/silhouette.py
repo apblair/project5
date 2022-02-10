@@ -32,7 +32,6 @@ class Silhouette:
         """
         
         cluster_labels = list(set(y))
-
         c_i = collections.Counter(y)
         
         d_ij = {label : [sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==label], metric=self.metric)[0]) \
@@ -49,14 +48,16 @@ class Silhouette:
         
         sil_dict = {label:[] for label in cluster_labels}
         for label in cluster_labels:
-            for b,a in zip(b_i[label],a_i[label]):
+            for b,a in zip(b_i[label],a_i[label]):                
                 num =  b-a
                 den = max([b,a])
                 sil_dict[label].append(num/den)
-        
-        sil_vals = [x for x in sil_dict.values()]
-        sil_vals = [item for sublist in sil_vals for item in sublist]
-        return sil_vals
+
+        silhouette_values = []
+        for label in y:
+            silhouette_values.append(sil_dict[label].pop(0))
+            
+        return np.array(silhouette_values)
 
 mat, labels = make_clusters()
 # test_mat, test_labels = make_clusters()
@@ -73,7 +74,7 @@ sil = Silhouette()
 sil.score(mat, predicted_labels)
 
 silhouette_values = silhouette_samples(mat, predicted_labels)
-print(min(silhouette_values))
-# print(silhouette_values[np.where(labels==2)])
-# print()
-# print(np.allclose(sil.score(mat, predicted_labels),silhouette_values))
+# silhouette_values = list(silhouette_values)
+# print(silhouette_values.index(min(silhouette_values)))
+
+print(np.allclose(sil.score(mat, predicted_labels),silhouette_values))
