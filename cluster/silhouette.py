@@ -30,11 +30,25 @@ class Silhouette:
             np.ndarray
                 a 1D array with the silhouette scores for each of the observations in `X`
         """
+        
+        cluster_labels = list(set(y))
+
         c_i = collections.Counter(y)
-        d_ij = {label : [sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==y[index]], metric=self.metric)[0]) \
-            for index in range(X[y==[label]].shape[0])] for label in list(set(y))}
+        
+        d_ij = {label : [sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==label], metric=self.metric)[0]) \
+            for index in list(np.where(y==label)[0])] \
+                for label in cluster_labels}
+
         a_i = {label: [1/(c_i[label]-1) * val for val in v] for label,v in d_ij.items()}
-        print(a_i[0])
+        
+        # b_i
+        for index,label in zip(range(X.shape[0]), y):
+            j_list = [j for j in cluster_labels if j != label]
+            print(index, label, j_list)
+            d_ij_list = [(1/c_i[j]) * sum(cdist(X[index,:].reshape(1,X.shape[-1]), X[y==j], metric=self.metric)[0]) for j in j_list] 
+            print(d_ij_list)
+            print(min(d_ij_list))
+            break
 
 mat, labels = make_clusters()
 # test_mat, test_labels = make_clusters()
