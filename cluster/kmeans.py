@@ -27,7 +27,6 @@ class KMeans:
         self.metric = metric
         self.tol = tol
         self.max_iter = max_iter
-        self.seed = seed
     
     def _check_input_mat(self, mat: np.ndarray) -> np.ndarray: 
         """
