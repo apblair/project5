@@ -8,7 +8,6 @@ from cluster import (
 
 
 def main():
-
     # create tight clusters
     clusters, labels = make_clusters(scale=0.3)
     plot_clusters(clusters, labels, filename="figures/tight_clusters.png")
